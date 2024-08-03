@@ -9,8 +9,8 @@ from flask_cors import CORS, cross_origin
 from pkg_resources import resource_filename
 from werkzeug.serving import make_server
 
-from .data_logger import DataLogger
-from .database import Database
+#from .data_logger import DataLogger
+#from .database import Database
 from .utils import log_error
 
 DEBUG_LEVELS = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
@@ -27,7 +27,7 @@ __default_settings__ = {
     "interval": 1,
 }
 
-__db__ = None
+#__db__ = None
 __config__ = {}
 __app__ = flask.Flask(__name__, static_folder=__www_path__)
 __cors__ = CORS(__app__)
@@ -169,7 +169,8 @@ def get_history():
     try:
         num = request.args.get("n")
         num = int(num)
-        data = __db__.get("history", n=num)
+        #data = __db__.get("history", n=num)
+        data = None
         return {"status": True, "data": data}
     except Exception as e:
         return {"status": False, "error": str(e)}
@@ -181,7 +182,8 @@ def get_time_range():
         start = request.args.get("start")
         end = request.args.get("end")
         key = request.args.get("key")
-        data = __db__.get_data_by_time_range("history", start, end, key)
+        #data = __db__.get_data_by_time_range("history", start, end, key)
+        data = None
         return {"status": True, "data": data}
     except Exception as e:
         return {"status": False, "error": str(e)}
@@ -233,7 +235,7 @@ def set_config():
 class PMDashboard(threading.Thread):
     @log_error
     def __init__(self, device_info=None, peripherals=[], settings=__default_settings__, config=None, get_logger=None):
-        global __config__, __device_info__, __db__, __log_path__
+        global __config__, __device_info__, __db__, __log_path__ 
         __device_info__ = device_info
         __log_path__ = f'/var/log/{device_info["id"]}'
 
@@ -246,8 +248,9 @@ class PMDashboard(threading.Thread):
         for handler in __app__.logger.handlers:
             self.log.addHandler(handler)
 
-        self.data_logger = DataLogger(settings=settings, peripherals=peripherals, get_logger=get_logger)
-        __db__ = Database(settings['database'], get_logger=get_logger)
+        #self.data_logger = DataLogger(settings=settings, peripherals=peripherals, get_logger=get_logger)
+        self.data_logger = None
+        #__db__ = Database(settings['database'], get_logger=get_logger)
         for key, value in config.items():
             __config__[key] = value
 
@@ -255,11 +258,12 @@ class PMDashboard(threading.Thread):
 
     @log_error
     def update_status(self, status):
-        self.data_logger.update_status(status)
+        #self.data_logger.update_status(status)
+        return
 
     @log_error
     def start(self):
-        __db__.start()
+        #__db__.start()
         self.server = make_server(__host__, __port__, __app__)
         self.ctx = __app__.app_context()
         self.ctx.push()
@@ -273,7 +277,7 @@ class PMDashboard(threading.Thread):
     @log_error
     def run(self):
         self.log.info("Dashboard Server start")
-        self.data_logger.start()
+        #self.data_logger.start()
         self.server.serve_forever()
         self.started = True
 
@@ -285,7 +289,7 @@ class PMDashboard(threading.Thread):
     def stop(self):
         if self.started:
             self.shutdown()
-            self.data_logger.stop()
-        __db__.close()
+            #self.data_logger.stop()
+        #__db__.close()
         self.log.info("Dashboard Server stopped")
 
