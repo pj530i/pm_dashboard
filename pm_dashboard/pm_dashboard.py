@@ -2,6 +2,7 @@
 import threading
 import logging
 from os import listdir
+import requests
 
 import flask
 from flask import request, send_from_directory
@@ -12,6 +13,9 @@ from werkzeug.serving import make_server
 #from .data_logger import DataLogger
 #from .database import Database
 from .utils import log_error
+
+NODERED = 'http://127.0.0.1:1880'
+CONFIG_UPDATE_ENDPOINT = '/pironman-config-update'
 
 DEBUG_LEVELS = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
 
@@ -229,6 +233,7 @@ def get_log():
 def set_config():
     data = request.json['data']
     __on_config_changed__(data)
+    requests.post(NODERED + CONFIG_UPDATE_ENDPOINT, json=data)
     return {"status": True, "data": __config__}
 
 
